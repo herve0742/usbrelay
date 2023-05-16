@@ -11,8 +11,12 @@ all: usbrelay libusbrelay.so libusbrelay.pc
 
 libusbrelay.so: libusbrelay.c libusbrelay.h 
 	$(CC) -shared -fPIC -Wl,-soname,$@.$(USBMAJOR) $(CPPFLAGS) $(CFLAGS)  $< $(LDFLAGS) -o $@.$(USBLIBVER) $(LDLIBS)
+ifneq ($(wildcard $(LDCONFIG)),)
 	$(LDCONFIG) -n .
-	ln -sr libusbrelay.so.$(USBLIBVER) libusbrelay.so
+else
+	ln -sfr libusbrelay.so.$(USBLIBVER) libusbrelay.so.$(USBMAJOR)
+endif
+	ln -sfr libusbrelay.so.$(USBLIBVER) libusbrelay.so
 
 usbrelay: usbrelay.c libusbrelay.h libusbrelay.so
 	$(CC) $(CPPFLAGS) $(CFLAGS)  $< -l:libusbrelay.so.$(USBLIBVER) -L./ $(LDFLAGS) -o $@ $(LDLIBS)
@@ -64,8 +68,12 @@ clean:
 install: usbrelay libusbrelay.so libusbrelay.pc
 	install -d $(DESTDIR)$(LIBDIR)
 	install -m 0755 libusbrelay.so.$(USBLIBVER) $(DESTDIR)$(LIBDIR)
+ifneq ($(wildcard $(LDCONFIG)),)
 	$(LDCONFIG) -n $(DESTDIR)$(LIBDIR)
-	( cd $(DESTDIR)$(LIBDIR); rm -f libusbrelay.so ;ln -sr libusbrelay.so.$(USBLIBVER) libusbrelay.so )
+else
+	( cd $(DESTDIR)$(LIBDIR); ln -sfr libusbrelay.so.$(USBLIBVER) libusbrelay.so.$(USBMAJOR) )
+endif
+	( cd $(DESTDIR)$(LIBDIR); ln -sfr libusbrelay.so.$(USBLIBVER) libusbrelay.so )
 	install -d $(DESTDIR)$(__BINDIR)
 	install -m 0755 usbrelay $(DESTDIR)$(__BINDIR)
 	install -d $(DESTDIR)$(INCLUDEDIR)
